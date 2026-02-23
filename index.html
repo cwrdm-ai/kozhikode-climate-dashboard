@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kozhikode District Climate Dashboard | Grama Panchayat CORDEX Projections 2000–2100</title>
+    <meta name="description"
+        content="Interactive climate projection dashboard for Kozhikode District's 70 Grama Panchayats using CORDEX South Asia data with area-weighted interpolation. Explore rainfall, temperature, DTR, and comfort projections.">
+    <link rel="stylesheet" href="style.css?v=3">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+
+<body>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner">
+            <div class="spinner-ring"></div>
+            <p>Loading Climate Data...</p>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+                        <path d="M2 12h20" />
+                    </svg>
+                </div>
+                <div>
+                    <h1>Kozhikode Climate Dashboard</h1>
+                    <p class="subtitle">CORDEX South Asia Projections • 70 Grama Panchayats • 2000–2100</p>
+                </div>
+            </div>
+            <div class="header-controls">
+                <div class="control-group">
+                    <label for="panchayat-select">Grama Panchayat</label>
+                    <select id="panchayat-select">
+                        <option value="">Loading panchayats…</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Scenario</label>
+                    <div class="scenario-toggle" id="scenario-toggle">
+                        <button class="scenario-btn active" data-scenario="rcp26">RCP 2.6</button>
+                        <button class="scenario-btn" data-scenario="rcp85">RCP 8.5</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Year Slider -->
+    <section class="year-slider-section">
+        <div class="year-slider-container">
+            <label for="year-slider">Selected Year: <span id="year-display" class="year-display">2025</span></label>
+            <div class="slider-wrapper">
+                <span class="slider-label">2000</span>
+                <input type="range" id="year-slider" min="2000" max="2099" value="2025" step="1">
+                <span class="slider-label">2099</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Summary Cards -->
+    <section class="summary-section">
+        <div class="card-grid">
+            <div class="summary-card rainfall-card">
+                <div class="card-icon">🌧️</div>
+                <div class="card-content">
+                    <div class="card-value" id="card-rainfall">--</div>
+                    <div class="card-label">Annual Rainfall (mm)</div>
+                    <div class="card-change" id="card-rainfall-change">--</div>
+                </div>
+            </div>
+            <div class="summary-card temp-card">
+                <div class="card-icon">🌡️</div>
+                <div class="card-content">
+                    <div class="card-value" id="card-temp">--</div>
+                    <div class="card-label">Mean Temperature (°C)</div>
+                    <div class="card-change" id="card-temp-change">--</div>
+                </div>
+            </div>
+            <div class="summary-card dtr-card">
+                <div class="card-icon">📊</div>
+                <div class="card-content">
+                    <div class="card-value" id="card-dtr">--</div>
+                    <div class="card-label">Diurnal Temp Range (°C)</div>
+                    <div class="card-change" id="card-dtr-change">--</div>
+                </div>
+            </div>
+            <div class="summary-card comfort-card">
+                <div class="card-icon">😓</div>
+                <div class="card-content">
+                    <div class="card-value" id="card-comfort">--</div>
+                    <div class="card-label">Comfort Index (DI)</div>
+                    <div class="card-status" id="card-comfort-status">--</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Map Section -->
+    <section class="map-section">
+        <div class="map-panel">
+            <div class="panel-header">
+                <h2>🗺️ Kozhikode District — Grama Panchayats</h2>
+                <span class="panel-badge" id="map-legend-label">Click a panchayat to select • Coloured by annual rainfall</span>
+            </div>
+            <div id="map" class="map-container"></div>
+        </div>
+    </section>
+
+    <!-- Main Charts -->
+    <main class="dashboard-main">
+        <!-- Row 1: Rainfall — 60/40 split -->
+        <div class="chart-row-wide">
+            <div class="chart-panel" id="rainfall-trend-panel">
+                <div class="panel-header">
+                    <h2>📈 Annual Rainfall Trend</h2>
+                    <span class="panel-badge">2000–2099</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="rainfall-trend-chart"></canvas>
+                </div>
+            </div>
+            <div class="chart-panel" id="monthly-rainfall-panel">
+                <div class="panel-header">
+                    <h2>📊 Monthly Rainfall</h2>
+                    <span class="panel-badge" id="monthly-rain-year">Year 2025</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="monthly-rainfall-chart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2: Temperature — Full Width Hero -->
+        <div class="chart-row-full">
+            <div class="chart-panel" id="temp-trend-panel">
+                <div class="panel-header">
+                    <h2>🌡️ Temperature Trend & ΔT</h2>
+                    <span class="panel-badge">Mean Annual Temperature</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="temp-trend-chart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 3: DTR, Comfort & Harvesting — Triple Columns -->
+        <div class="chart-row-triple">
+            <div class="chart-panel" id="dtr-trend-panel">
+                <div class="panel-header">
+                    <h2>📉 Diurnal Temp Range</h2>
+                    <span class="panel-badge">Annual DTR</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="dtr-trend-chart"></canvas>
+                </div>
+            </div>
+            <div class="chart-panel" id="comfort-panel">
+                <div class="panel-header">
+                    <h2>😓 Comfort Index</h2>
+                    <span class="panel-badge">Discomfort Index (DI)</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="comfort-chart"></canvas>
+                </div>
+            </div>
+            <div class="chart-panel harvesting-panel" id="harvesting-panel">
+                <div class="panel-header">
+                    <h2>💧 Rainwater Harvesting</h2>
+                </div>
+                <div class="harvesting-content">
+                    <div class="harvesting-inputs">
+                        <div class="input-group">
+                            <label for="roof-area">Roof Area (m²)</label>
+                            <input type="number" id="roof-area" value="100" min="1" max="10000" step="10">
+                        </div>
+                        <div class="input-group">
+                            <label for="runoff-coeff">Runoff Coefficient</label>
+                            <input type="number" id="runoff-coeff" value="0.8" min="0.1" max="1.0" step="0.05">
+                        </div>
+                        <button id="calc-harvest-btn" class="harvest-btn">Calculate</button>
+                    </div>
+                    <div class="harvesting-results">
+                        <div class="harvest-result-card">
+                            <div class="harvest-value" id="harvest-annual">--</div>
+                            <div class="harvest-label">Annual Harvest (L)</div>
+                        </div>
+                        <div class="harvest-result-card">
+                            <div class="harvest-value" id="harvest-daily">--</div>
+                            <div class="harvest-label">Daily Avg (L/day)</div>
+                        </div>
+                        <div class="harvest-result-card">
+                            <div class="harvest-value" id="harvest-change">--</div>
+                            <div class="harvest-label">Δ from Baseline</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Data Source: CORDEX South Asia (WAS-22) Regional Climate Model Outputs • Multi-model Ensemble Mean</p>
+        <p>Models: ICHEC-EC-EARTH, MOHC-HadGEM2-ES, MPI-M-MPI-ESM-LR, NCC-NorESM1-M | RCMs: COSMO-crCLIM, REMO2015</p>
+    </footer>
+
+    <script src="app.js?v=3"></script>
+</body>
+
+</html>
