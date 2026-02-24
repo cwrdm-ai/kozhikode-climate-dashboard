@@ -8,7 +8,8 @@
     <meta name="description"
         content="Interactive climate projection dashboard for Kozhikode District's 70 Grama Panchayats using CORDEX South Asia data with area-weighted interpolation. Explore rainfall, temperature, DTR, and comfort projections.">
     <link rel="stylesheet" href="style.css?v=3">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap"
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script
@@ -44,13 +45,29 @@
             </div>
             <div class="header-controls">
                 <div class="control-group">
-                    <label for="panchayat-select">Grama Panchayat</label>
+                    <label for="panchayat-select"><span class="label-icon">📍</span> Grama Panchayat</label>
                     <select id="panchayat-select">
                         <option value="">Loading panchayats…</option>
                     </select>
                 </div>
                 <div class="control-group">
-                    <label>Scenario</label>
+                    <label><span class="label-icon">⚡</span> Scenario
+                        <span class="info-wrap" id="scenario-wrap">
+                            <button class="info-btn" aria-label="What is RCP?">ⓘ</button>
+                            <div class="info-popup" id="scenario-chart-info" style="display:none">
+                                <div class="info-tooltip-header">What is RCP?</div>
+                                <p><strong>RCP</strong> stands for <strong>Representative Concentration
+                                        Pathway</strong>. It describes how much greenhouse gas is expected in the
+                                    atmosphere in the future.</p>
+                                <p><strong>RCP 2.6 (Low Emissions):</strong> Best-case — world takes strong action.
+                                    Temperature rise stays below 2°C.</p>
+                                <p><strong>RCP 8.5 (High Emissions):</strong> Worst-case — emissions rise unchecked.
+                                    Temperature rises 4–5°C by 2100.</p>
+                                <p class="info-tooltip-hint">💡 Compare both to see how climate action could affect your
+                                    panchayat.</p>
+                            </div>
+                        </span>
+                    </label>
                     <div class="scenario-toggle" id="scenario-toggle">
                         <button class="scenario-btn active" data-scenario="rcp26">RCP 2.6</button>
                         <button class="scenario-btn" data-scenario="rcp85">RCP 8.5</button>
@@ -115,7 +132,8 @@
         <div class="map-panel">
             <div class="panel-header">
                 <h2>🗺️ Kozhikode District — Grama Panchayats</h2>
-                <span class="panel-badge" id="map-legend-label">Click a panchayat to select • Coloured by annual rainfall</span>
+                <span class="panel-badge" id="map-legend-label">Click a panchayat to select • Coloured by annual
+                    rainfall</span>
             </div>
             <div id="map" class="map-container"></div>
         </div>
@@ -162,7 +180,23 @@
         <div class="chart-row-triple">
             <div class="chart-panel" id="dtr-trend-panel">
                 <div class="panel-header">
-                    <h2>📉 Diurnal Temp Range</h2>
+                    <h2>📉 Diurnal Temp Range
+                        <span class="info-wrap" id="dtr-wrap">
+                            <button class="info-btn" aria-label="What is DTR?">ⓘ</button>
+                            <div class="info-popup" id="dtr-chart-info" style="display:none">
+                                <div class="info-tooltip-header">What is Diurnal Temperature Range?</div>
+                                <p><strong>Diurnal Temperature Range (DTR)</strong> is the difference between the
+                                    <strong>highest (day)</strong> and <strong>lowest (night) temperature</strong>
+                                    in a single day.
+                                </p>
+                                <p>E.g. if day is 34°C and night is 24°C, DTR = <strong>10°C</strong>.</p>
+                                <p>A <strong>larger DTR</strong> means hotter days and cooler nights.
+                                    A <strong>smaller DTR</strong> feels muggy and uncomfortable all day.</p>
+                                <p class="info-tooltip-hint">💡 DTR is important for agriculture — crops need cool
+                                    nights to recover from daytime heat.</p>
+                            </div>
+                        </span>
+                    </h2>
                     <span class="panel-badge">Annual DTR</span>
                 </div>
                 <div class="chart-container">
@@ -171,7 +205,22 @@
             </div>
             <div class="chart-panel" id="comfort-panel">
                 <div class="panel-header">
-                    <h2>😓 Comfort Index</h2>
+                    <h2>😓 Comfort Index
+                        <span class="info-wrap" id="comfort-wrap">
+                            <button class="info-btn" aria-label="What is Comfort Index?">ⓘ</button>
+                            <div class="info-popup" id="comfort-chart-info" style="display:none">
+                                <div class="info-tooltip-header">What is the Comfort Index?</div>
+                                <p>The <strong>Comfort (Discomfort) Index</strong> measures how comfortable
+                                    the weather feels based on <strong>temperature and humidity</strong>.</p>
+                                <p><strong>Below 21:</strong> Comfortable<br>
+                                    <strong>21–24:</strong> Mild discomfort<br>
+                                    <strong>24–27:</strong> Uncomfortable — most feel hot<br>
+                                    <strong>Above 27:</strong> Severe — health risk
+                                </p>
+                                <p class="info-tooltip-hint">💡 Higher values = hotter and more humid conditions.</p>
+                            </div>
+                        </span>
+                    </h2>
                     <span class="panel-badge">Discomfort Index (DI)</span>
                 </div>
                 <div class="chart-container">
@@ -188,9 +237,20 @@
                             <label for="roof-area">Roof Area (m²)</label>
                             <input type="number" id="roof-area" value="100" min="1" max="10000" step="10">
                         </div>
+                        <div class="input-group material-group">
+                            <label for="roof-material">Roof Material</label>
+                            <select id="roof-material">
+                                <option value="concrete">Concrete</option>
+                                <option value="gi_fibre" selected>GI sheet / Fibre sheet</option>
+                                <option value="tile">Tile</option>
+                                <option value="asbestos">Asbestos</option>
+                                <option value="organic">Organic</option>
+                            </select>
+                        </div>
                         <div class="input-group">
                             <label for="runoff-coeff">Runoff Coefficient</label>
-                            <input type="number" id="runoff-coeff" value="0.8" min="0.1" max="1.0" step="0.05">
+                            <input type="number" id="runoff-coeff" value="0.8" min="0.1" max="1.0" step="0.05" readonly>
+                            <small class="input-hint">Auto set from material</small>
                         </div>
                         <button id="calc-harvest-btn" class="harvest-btn">Calculate</button>
                     </div>
@@ -219,7 +279,7 @@
         <p>Models: ICHEC-EC-EARTH, MOHC-HadGEM2-ES, MPI-M-MPI-ESM-LR, NCC-NorESM1-M | RCMs: COSMO-crCLIM, REMO2015</p>
     </footer>
 
-    <script src="app.js?v=3"></script>
+    <script src="app.js?v=5"></script>
 </body>
 
 </html>

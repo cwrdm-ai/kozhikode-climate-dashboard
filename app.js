@@ -10,6 +10,7 @@ let currentPanchayat = null;   // set after data loads
 let currentScenario = 'rcp26';
 let currentYear = 2025;
 let choroplethVar = 'rainfall';  // 'rainfall' | 'temperature'
+let harvestCalculated = false;
 
 // Chart instances
 let rainfallTrendChart = null;
@@ -24,6 +25,13 @@ let geojsonLayer = null;
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const ROOF_MATERIAL_RUNOFF = {
+    concrete: 0.85,
+    gi_fibre: 0.8,
+    tile: 0.75,
+    asbestos: 0.7,
+    organic: 0.6,
+};
 
 // ── Chart.js defaults ─────────────────────────────────────────────
 Chart.defaults.color = '#475569';
@@ -93,13 +101,24 @@ function initDashboard() {
         document.getElementById('year-display').textContent = currentYear;
         updateSummaryCards();
         updateMonthlyRainfall();
-        updateHarvesting();
+        refreshHarvesting();
         refreshChoropleth();
     });
 
-    document.getElementById('calc-harvest-btn').addEventListener('click', updateHarvesting);
-    document.getElementById('roof-area').addEventListener('input', updateHarvesting);
-    document.getElementById('runoff-coeff').addEventListener('input', updateHarvesting);
+    document.getElementById('calc-harvest-btn').addEventListener('click', () => {
+        harvestCalculated = true;
+        updateHarvesting();
+    });
+    document.getElementById('roof-material').addEventListener('change', () => {
+        syncRunoffFromMaterial();
+        harvestCalculated = false;
+        clearHarvestingResults();
+    });
+    document.getElementById('roof-area').addEventListener('input', () => {
+        harvestCalculated = false;
+        clearHarvestingResults();
+    });
+    syncRunoffFromMaterial();
 
     initMap();
     updateAll();
@@ -120,7 +139,7 @@ function updateAll() {
     updateTempTrend();
     updateDTRTrend();
     updateComfortTrend();
-    updateHarvesting();
+    refreshHarvesting();
     refreshChoropleth();
 }
 
@@ -397,30 +416,66 @@ function updateComfortTrend() {
 }
 
 // ── Rainwater Harvesting ──────────────────────────────────────────
+function syncRunoffFromMaterial() {
+    const materialEl = document.getElementById('roof-material');
+    const runoffEl = document.getElementById('runoff-coeff');
+    const runoffValue = ROOF_MATERIAL_RUNOFF[materialEl?.value];
+
+    if (runoffValue == null || !runoffEl) return;
+    runoffEl.value = Number(runoffValue.toFixed(2)).toString();
+}
+
+function clearHarvestingResults() {
+    document.getElementById('harvest-annual').textContent = '--';
+    document.getElementById('harvest-daily').textContent = '--';
+    const chEl = document.getElementById('harvest-change');
+    chEl.textContent = '--';
+    chEl.style.color = '';
+}
+
+function refreshHarvesting() {
+    if (!harvestCalculated) {
+        clearHarvestingResults();
+        return;
+    }
+    updateHarvesting();
+}
+
 function updateHarvesting() {
     const d = getPanchayatData();
-    if (!d) return;
-    const roofArea = parseFloat(document.getElementById('roof-area').value) || 100;
-    const runoff = parseFloat(document.getElementById('runoff-coeff').value) || 0.8;
+    if (!d) {
+        clearHarvestingResults();
+        return;
+    }
+
+    const roofArea = parseFloat(document.getElementById('roof-area').value);
+    const runoff = parseFloat(document.getElementById('runoff-coeff').value);
+    const hasValidRoof = Number.isFinite(roofArea) && roofArea > 0;
+    const hasValidRunoff = Number.isFinite(runoff) && runoff > 0 && runoff <= 1;
+
     const yrStr = String(currentYear);
     const annualPr = d.annual_pr[yrStr];
     const baselinePr = d.baseline_pr;
 
-    if (annualPr != null) {
+    if (annualPr != null && baselinePr != null && hasValidRoof && hasValidRunoff) {
         const harvestLitres = annualPr * roofArea * runoff;
         const baselineHarvest = baselinePr * roofArea * runoff;
         const dailyAvg = harvestLitres / 365;
-        const pctChange = ((harvestLitres - baselineHarvest) / baselineHarvest * 100);
 
         document.getElementById('harvest-annual').textContent = Math.round(harvestLitres).toLocaleString();
         document.getElementById('harvest-daily').textContent = dailyAvg.toFixed(1);
+
         const chEl = document.getElementById('harvest-change');
-        chEl.textContent = `${pctChange >= 0 ? '+' : ''}${pctChange.toFixed(1)}%`;
-        chEl.style.color = pctChange >= 0 ? '#10b981' : '#ef4444';
+        if (baselineHarvest > 0) {
+            const pctChange = ((harvestLitres - baselineHarvest) / baselineHarvest * 100);
+            chEl.textContent = `${pctChange >= 0 ? '+' : ''}${pctChange.toFixed(1)}%`;
+            chEl.style.color = pctChange >= 0 ? '#10b981' : '#ef4444';
+        } else {
+            chEl.textContent = '--';
+            chEl.style.color = '';
+        }
     } else {
-        document.getElementById('harvest-annual').textContent = '--';
-        document.getElementById('harvest-daily').textContent = '--';
-        document.getElementById('harvest-change').textContent = '--';
+        clearHarvestingResults();
     }
 }
 
@@ -608,6 +663,36 @@ function selectPanchayatFromMap(name) {
     map.closePopup();
     updateAll();
 }
+
+// ── Info Popup Toggle ─────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    function closeAllPopups() {
+        document.querySelectorAll('.info-popup').forEach(p => p.style.display = 'none');
+    }
+
+    document.querySelectorAll('.info-wrap .info-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+            const wrap = btn.closest('.info-wrap');
+            if (!wrap) return;
+            const popup = wrap.querySelector('.info-popup');
+            if (!popup) return;
+            const isOpen = popup.style.display === 'block';
+            closeAllPopups();
+            if (!isOpen) popup.style.display = 'block';
+        });
+    });
+
+    // Close on click outside
+    document.addEventListener('click', e => {
+        if (!e.target.closest('.info-wrap')) closeAllPopups();
+    });
+
+    // Close on Escape
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeAllPopups();
+    });
+});
 
 // ── Boot ──────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', loadData);

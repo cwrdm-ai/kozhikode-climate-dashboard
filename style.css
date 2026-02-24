@@ -250,11 +250,19 @@ body::after {
 }
 
 .control-group label {
-    font-size: 0.68rem;
+    font-size: 0.78rem;
     text-transform: uppercase;
-    letter-spacing: 1.2px;
-    color: var(--text-muted);
-    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.label-icon {
+    font-size: 0.85rem;
+    line-height: 1;
 }
 
 select#panchayat-select {
@@ -441,7 +449,7 @@ input[type="range"]::-moz-range-thumb {
     -webkit-backdrop-filter: blur(16px);
     transition: var(--transition);
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
 }
 
@@ -761,7 +769,7 @@ input[type="range"]::-moz-range-thumb {
     -webkit-backdrop-filter: blur(16px);
     transition: var(--transition);
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
 }
 
@@ -856,7 +864,8 @@ input[type="range"]::-moz-range-thumb {
     font-weight: 700;
 }
 
-.input-group input {
+.input-group input,
+.input-group select {
     background: var(--bg-secondary);
     border: 1px solid var(--border-glass);
     color: var(--text-primary);
@@ -870,10 +879,21 @@ input[type="range"]::-moz-range-thumb {
     box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
-.input-group input:focus {
+.input-group input:focus,
+.input-group select:focus {
     outline: none;
     border-color: var(--accent-blue);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.material-group select {
+    width: 210px;
+}
+
+.input-hint {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    font-weight: 500;
 }
 
 .harvest-btn {
@@ -1011,7 +1031,8 @@ input[type="range"]::-moz-range-thumb {
         align-items: stretch;
     }
 
-    .input-group input {
+    .input-group input,
+    .input-group select {
         width: 100%;
     }
 
@@ -1138,4 +1159,152 @@ input[type="range"]::-moz-range-thumb {
     border-radius: 10px !important;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
     padding: 8px 12px !important;
+}
+
+/* ── Info Tooltip Buttons & Popups ────────────────────────── */
+.info-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--accent-blue);
+    font-size: 0.7rem;
+    font-weight: 700;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: var(--transition);
+    vertical-align: middle;
+    margin-left: 4px;
+    line-height: 1;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.info-btn:hover {
+    background: var(--accent-blue);
+    color: white;
+    transform: scale(1.15);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+/* ── Chart panel inline popup (info-wrap approach) ──────────── */
+.info-wrap {
+    display: inline-block;
+    position: relative;
+    vertical-align: middle;
+}
+
+.info-popup {
+    display: none;
+    position: absolute;
+    z-index: 9999;
+    top: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    max-width: 90vw;
+    background: #1e293b;
+    color: #e2e8f0;
+    border-radius: 16px;
+    padding: 18px 20px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3), 0 4px 15px rgba(0, 0, 0, 0.15);
+    font-size: 0.82rem;
+    font-weight: 400;
+    line-height: 1.65;
+    animation: tooltipFadeIn 0.2s ease;
+    text-align: left;
+    white-space: normal;
+}
+
+.info-popup::before {
+    content: '';
+    position: absolute;
+    top: -7px;
+    left: 50%;
+    transform: translateX(-50%) rotate(45deg);
+    width: 14px;
+    height: 14px;
+    background: #1e293b;
+    border-radius: 3px;
+}
+
+.info-wrap.open .info-popup {
+    display: block;
+}
+
+/* Ensure chart-panel doesn't clip the popup */
+.chart-panel {
+    overflow: visible !important;
+}
+
+@keyframes tooltipFadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* Shared tooltip text styles */
+.info-tooltip-header,
+.info-popup .info-tooltip-header {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.info-popup p {
+    margin-bottom: 8px;
+    color: #cbd5e1;
+}
+
+.info-popup p:last-child {
+    margin-bottom: 0;
+}
+
+.info-popup strong {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.info-tooltip-hint {
+    margin-top: 10px !important;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    color: #94a3b8 !important;
+    font-size: 0.78rem;
+    font-style: italic;
+}
+
+/* Panel header h2 alignment */
+.panel-header h2 .info-wrap {
+    margin-left: 4px;
+}
+
+/* Scenario popup: align to right side since it's at top-right of page */
+#scenario-wrap .info-popup {
+    left: auto;
+    right: 0;
+    transform: none;
+}
+
+#scenario-wrap .info-popup::before {
+    left: auto;
+    right: 14px;
+    transform: rotate(45deg);
+}
+
+#scenario-wrap.open .info-popup {
+    display: block;
 }
