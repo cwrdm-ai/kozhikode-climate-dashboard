@@ -1,0 +1,496 @@
+Total features: 436
+Generator: overpass-turbo
+Timestamp: 2026-02-21T07:06:05Z
+
+All property keys:
+  - @id  (436/436 features)
+  - @relations  (347/436 features)
+  - admin_level  (246/436 features)
+  - alt_name  (1/436 features)
+  - amenity  (2/436 features)
+  - boundary  (246/436 features)
+  - bridge:support  (4/436 features)
+  - building  (1/436 features)
+  - description  (2/436 features)
+  - ele  (3/436 features)
+  - highway  (5/436 features)
+  - local_authority:IN  (78/436 features)
+  - name  (156/436 features)
+  - name:ar  (4/436 features)
+  - name:fr  (1/436 features)
+  - name:hi  (2/436 features)
+  - name:ja  (1/436 features)
+  - name:kn  (8/436 features)
+  - name:ko  (1/436 features)
+  - name:ml  (149/436 features)
+  - name:ta  (13/436 features)
+  - name:te  (5/436 features)
+  - natural  (104/436 features)
+  - old_name  (1/436 features)
+  - place  (67/436 features)
+  - population  (1/436 features)
+  - postal_code  (4/436 features)
+  - religion  (1/436 features)
+  - source  (6/436 features)
+  - survey:date  (5/436 features)
+  - type  (78/436 features)
+  - waterway  (6/436 features)
+  - wikidata  (93/436 features)
+  - wikipedia  (13/436 features)
+
+Geometry types: {'Polygon': 77, 'MultiPolygon': 1, 'LineString': 277, 'Point': 81}
+
+admin_level distribution:
+  level 4: 3 features
+  level 5: 165 features
+  level 8: 78 features
+  level N/A: 190 features
+
+local_authority:IN distribution:
+  N/A: 358
+  gram_panchayat: 70
+  municipal_corporation: 1
+  municipality: 7
+
+boundary tag distribution:
+  N/A: 190
+  administrative: 168
+  local_authority: 78
+
+All feature names:
+  [4] ?
+  [4] ?
+  [4] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [5] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] ?
+  [?] Arikkulam
+  [?] Atholi
+  [?] Ayancheri
+  [?] Azhiyur
+  [?] Balusseri Mukku
+  [?] Chakkittapara
+  [?] Changaroth
+  [?] Chathamangalam
+  [?] Chekkiad
+  [?] Chelannur
+  [?] Chemanchery
+  [?] Chembra peak
+  [?] Chengottukavu
+  [?] Cheruvannur
+  [?] Engapuzha
+  [?] Eramala
+  [?] Feroke
+  [?] Kadalundi
+  [?] Kakkodi Bazar
+  [?] Kakkur
+  [?] Kavilumpara
+  [?] Kayakkody
+  [?] Kayanna Bazar
+  [?] Keezhariyur
+  [?] Kizhakkoth
+  [?] Kodencherry
+  [?] Kodiyathur
+  [?] Koduvally
+  [?] Koodaranji
+  [?] Koorachundu
+  [?] Koothali
+  [?] Kottur
+  [?] Koyilandy
+  [?] Kunnamangalam
+  [?] Kunnummal
+  [?] Kuruvattoor
+  [?] Kuttiadi
+  [?] Madavoor Mukku
+  [?] Maniyur
+  [?] Maruthomkara
+  [?] Meppayur
+  [?] Murat River
+  [?] Murat River
+  [?] Murat River
+  [?] Murat River
+  [?] Murat River
+  [?] Murat River
+  [?] Nadapuram
+  [?] Naduvannur
+  [?] Nanminda 13th Mile
+  [?] Narikkuni
+  [?] Narippatta
+  [?] Olavanna
+  [?] Omassery
+  [?] Onchiyam
+  [?] Panangad
+  [?] Payyoli
+  [?] Perambra
+  [?] Perumanna
+  [?] Peruvayal
+  [?] Purameri
+  [?] Ramanattukara
+  [?] Thalakkulathur
+  [?] Thamarassery
+  [?] Thikkodi
+  [?] Thiruvallur
+  [?] Thiruvambady
+  [?] Thurayur
+  [?] Tuneri
+  [?] Ulliyeri
+  [?] Vadakara
+  [?] Valayam
+  [?] Vanimel
+  [?] Vavul Mala
+  [?] Vellarimala
+  [?] Velom
+  [?] Villiappally
+  [?] police point
+  [gram_panchayat] Arikkulam
+  [gram_panchayat] Atholi
+  [gram_panchayat] Ayancheri
+  [gram_panchayat] Azhiyur
+  [gram_panchayat] Balussery
+  [gram_panchayat] Chakkittapara
+  [gram_panchayat] Changaroth
+  [gram_panchayat] Chathamangalam
+  [gram_panchayat] Chekkiad
+  [gram_panchayat] Chelannur
+  [gram_panchayat] Chemanchery
+  [gram_panchayat] Chengottukavu
+  [gram_panchayat] Cheruvannur
+  [gram_panchayat] Chorode
+  [gram_panchayat] Edacheri
+  [gram_panchayat] Eramala
+  [gram_panchayat] Kadalundi
+  [gram_panchayat] Kakkodi
+  [gram_panchayat] Kakkur
+  [gram_panchayat] Karassery
+  [gram_panchayat] Kattippara
+  [gram_panchayat] Kavilumpara
+  [gram_panchayat] Kayakkody
+  [gram_panchayat] Kayanna
+  [gram_panchayat] Keezhariyur
+  [gram_panchayat] Kizhakkoth
+  [gram_panchayat] Kodanchery
+  [gram_panchayat] Kodiyathur
+  [gram_panchayat] Koodaranhi
+  [gram_panchayat] Koorachundu
+  [gram_panchayat] Koothali
+  [gram_panchayat] Kottur
+  [gram_panchayat] Kunnamangalam
+  [gram_panchayat] Kunnummal
+  [gram_panchayat] Kuruvattoor
+  [gram_panchayat] Kuttiadi
+  [gram_panchayat] Madavoor
+  [gram_panchayat] Maniyur
+  [gram_panchayat] Maruthonkara
+  [gram_panchayat] Mavoor
+  [gram_panchayat] Meppayur
+  [gram_panchayat] Moodadi
+  [gram_panchayat] Nadapuram
+  [gram_panchayat] Naduvannur
+  [gram_panchayat] Nanminda
+  [gram_panchayat] Narikunni
+  [gram_panchayat] Narippatta
+  [gram_panchayat] Nochad
+  [gram_panchayat] Olavanna
+  [gram_panchayat] Omassery
+  [gram_panchayat] Onchiyam
+  [gram_panchayat] Panangad
+  [gram_panchayat] Perambra
+  [gram_panchayat] Perumanna
+  [gram_panchayat] Peruvayal
+  [gram_panchayat] Purameri
+  [gram_panchayat] Puthuppadi
+  [gram_panchayat] Thalakulathur
+  [gram_panchayat] Thamarassery
+  [gram_panchayat] Thikkodi
+  [gram_panchayat] Thiruvallur
+  [gram_panchayat] Thiruvambadi
+  [gram_panchayat] Thurayur
+  [gram_panchayat] Tuneri
+  [gram_panchayat] Ulliyeri
+  [gram_panchayat] Unnikulam
+  [gram_panchayat] Valayam
+  [gram_panchayat] Vanimel
+  [gram_panchayat] Velom
+  [gram_panchayat] Villiappally
+  [municipal_corporation] Kozhikode
+  [municipality] Feroke
+  [municipality] Koduvally
+  [municipality] Koyilandy
+  [municipality] Mukkam
+  [municipality] Payyoli
+  [municipality] Ramanattukara
+  [municipality] Vatakara

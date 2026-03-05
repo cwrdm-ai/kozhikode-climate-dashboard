@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kozhikode District Climate Dashboard | Grama Panchayat CORDEX Projections 2000–2100</title>
+    <title>Susthira — Kozhikode Climate Projection Dashboard | 2000–2100</title>
     <meta name="description"
         content="Interactive climate projection dashboard for Kozhikode District's 70 Grama Panchayats using CORDEX South Asia data with area-weighted interpolation. Explore rainfall, temperature, DTR, and comfort projections.">
     <link rel="stylesheet" href="style.css?v=3">
@@ -39,13 +39,14 @@
                     </svg>
                 </div>
                 <div>
-                    <h1>Kozhikode Climate Dashboard</h1>
-                    <p class="subtitle">CORDEX South Asia Projections • 70 Grama Panchayats • 2000–2100</p>
+                    <h1><em>Susthira</em> — Kozhikode Climate Projection Dashboard</h1>
+                    <p class="subtitle">Projections • 70 Grama Panchayats + 8 Urban Units • 2000–2100
+                    </p>
                 </div>
             </div>
             <div class="header-controls">
                 <div class="control-group">
-                    <label for="panchayat-select"><span class="label-icon">📍</span> Grama Panchayat</label>
+                    <label for="panchayat-select"><span class="label-icon">📍</span> Local Body</label>
                     <select id="panchayat-select">
                         <option value="">Loading panchayats…</option>
                     </select>
@@ -131,8 +132,8 @@
     <section class="map-section">
         <div class="map-panel">
             <div class="panel-header">
-                <h2>🗺️ Kozhikode District — Grama Panchayats</h2>
-                <span class="panel-badge" id="map-legend-label">Click a panchayat to select • Coloured by annual
+                <h2>🗺️ Kozhikode District — Local Bodies</h2>
+                <span class="panel-badge" id="map-legend-label">Click a local body to select • Coloured by annual
                     rainfall</span>
             </div>
             <div id="map" class="map-container"></div>
@@ -279,7 +280,7 @@
         <p>Models: ICHEC-EC-EARTH, MOHC-HadGEM2-ES, MPI-M-MPI-ESM-LR, NCC-NorESM1-M | RCMs: COSMO-crCLIM, REMO2015</p>
     </footer>
 
-    <script src="app.js?v=5"></script>
+    <script src="app.js?v=10"></script>
 </body>
 
 </html>

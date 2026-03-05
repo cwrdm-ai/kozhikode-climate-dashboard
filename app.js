@@ -22,6 +22,7 @@ let comfortChart = null;
 // Map
 let map = null;
 let geojsonLayer = null;
+let municipalityLayer = null;
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -32,6 +33,8 @@ const ROOF_MATERIAL_RUNOFF = {
     asbestos: 0.7,
     organic: 0.6,
 };
+const TREND_YEAR_MIN = 2000;
+const TREND_YEAR_MAX = 2099;
 
 // ── Chart.js defaults ─────────────────────────────────────────────
 Chart.defaults.color = '#475569';
@@ -44,12 +47,87 @@ Chart.defaults.plugins.legend.labels.padding = 16;
 Chart.defaults.elements.point.radius = 0;
 Chart.defaults.elements.point.hoverRadius = 5;
 Chart.defaults.elements.line.tension = 0.3;
+const xScrubTooltip = {
+    id: 'xScrubTooltip',
+    afterEvent(chart, args, pluginOptions) {
+        if (!pluginOptions?.enabled) return;
+        if (!chart.chartArea) return;
+
+        const event = args.event;
+        if (!event) return;
+
+        const state = chart.$xScrubTooltipState || (chart.$xScrubTooltipState = { index: null, activeKey: '' });
+        const clearActiveElements = () => {
+            if (state.index === null && state.activeKey === '') return;
+            chart.setActiveElements([]);
+            chart.tooltip?.setActiveElements([], { x: 0, y: 0 });
+            state.index = null;
+            state.activeKey = '';
+            args.changed = true;
+        };
+
+        if (event.type === 'mouseout' || event.type === 'mouseleave') {
+            clearActiveElements();
+            return;
+        }
+        if (event.type !== 'mousemove' && event.type !== 'touchmove') return;
+
+        const { left, right, top, bottom } = chart.chartArea;
+        const { x, y } = event;
+        if (!Number.isFinite(x) || !Number.isFinite(y) || x < left || x > right || y < top || y > bottom) {
+            clearActiveElements();
+            return;
+        }
+
+        const labels = chart.data?.labels || [];
+        if (!labels.length) {
+            clearActiveElements();
+            return;
+        }
+
+        const width = right - left;
+        const rawIndex = labels.length === 1 || width <= 0
+            ? 0
+            : Math.round(((x - left) / width) * (labels.length - 1));
+        const index = Math.max(0, Math.min(labels.length - 1, rawIndex));
+
+        const activeElements = [];
+        chart.data.datasets.forEach((dataset, datasetIndex) => {
+            if (!chart.isDatasetVisible(datasetIndex)) return;
+            if (index >= dataset.data.length) return;
+            if (dataset.data[index] == null) return;
+            activeElements.push({ datasetIndex, index });
+        });
+
+        if (!activeElements.length) {
+            clearActiveElements();
+            return;
+        }
+
+        const activeKey = activeElements.map(el => `${el.datasetIndex}:${el.index}`).join('|');
+        if (state.index === index && state.activeKey === activeKey) return;
+
+        const element = chart.getDatasetMeta(activeElements[0].datasetIndex)?.data?.[index];
+        const tooltipPosition = element ? { x: element.x, y: element.y } : { x, y };
+
+        chart.setActiveElements(activeElements);
+        chart.tooltip?.setActiveElements(activeElements, tooltipPosition);
+        state.index = index;
+        state.activeKey = activeKey;
+        args.changed = true;
+    },
+    beforeDestroy(chart) {
+        delete chart.$xScrubTooltipState;
+    },
+};
+
+Chart.register(xScrubTooltip);
 
 // ── Data Loading ──────────────────────────────────────────────────
 async function loadData() {
     try {
         const [climateResp, geojsonResp] = await Promise.all([
-            fetch('kozhikode_climate_data.json'),
+            fetch('kozhikode_climate_data.json?v=2'),
             fetch('kozhikode_panchayats.geojson'),
         ]);
         climateData = await climateResp.json();
@@ -69,16 +147,41 @@ function initDashboard() {
     // Default panchayat: first in the list
     currentPanchayat = climateData.panchayats[0] || 'Balussery';
 
-    // Populate dropdown
+    // Collect urban units from climate data (now have real preprocessed data)
+    const urbanUnits = (climateData.urban_units || []).map(name => {
+        const coordInfo = climateData.panchayat_coords?.[name] || {};
+        return { name, type: coordInfo.type || 'municipality' };
+    }).sort((a, b) => a.name.localeCompare(b.name));
+
+    // Populate dropdown with optgroups
     const sel = document.getElementById('panchayat-select');
     sel.innerHTML = '';
+
+    // Urban group
+    if (urbanUnits.length) {
+        const grpUrban = document.createElement('optgroup');
+        grpUrban.label = '🏙️ Municipality / Corporation';
+        urbanUnits.forEach(({ name, type }) => {
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.textContent = type === 'municipal_corporation' ? `${name} (Corporation)` : name;
+            if (name === currentPanchayat) opt.selected = true;
+            grpUrban.appendChild(opt);
+        });
+        sel.appendChild(grpUrban);
+    }
+
+    // Grama Panchayat group
+    const grpGrama = document.createElement('optgroup');
+    grpGrama.label = '🌿 Grama Panchayats';
     climateData.panchayats.slice().sort().forEach(name => {
         const opt = document.createElement('option');
         opt.value = name;
         opt.textContent = name;
         if (name === currentPanchayat) opt.selected = true;
-        sel.appendChild(opt);
+        grpGrama.appendChild(opt);
     });
+    sel.appendChild(grpGrama);
 
     // Events
     sel.addEventListener('change', e => {
@@ -129,6 +232,13 @@ function getPanchayatData(name) {
     name = name || currentPanchayat;
     if (!climateData) return null;
     return climateData.scenarios[currentScenario]?.[name];
+}
+
+function getTrendYears(seriesByYear) {
+    return Object.keys(seriesByYear || {})
+        .map(Number)
+        .filter(y => y >= TREND_YEAR_MIN && y <= TREND_YEAR_MAX)
+        .sort((a, b) => a - b);
 }
 
 // ── Update Everything ─────────────────────────────────────────────
@@ -229,17 +339,20 @@ function updateRainfallTrend() {
                     borderColor: '#06b6d4',
                     backgroundColor: 'rgba(6,182,212,0.08)',
                     fill: true, borderWidth: 2,
+                    pointHoverRadius: 4, pointHitRadius: 20,
                 },
                 {
                     label: 'Baseline (1981–2005)',
                     data: years.map(() => baseline),
                     borderColor: 'rgba(245,158,11,0.6)',
-                    borderDash: [8, 4], borderWidth: 1.5, pointRadius: 0,
+                    borderDash: [8, 4], borderWidth: 1.5, pointRadius: 0, pointHoverRadius: 0,
                 }
             ]
         },
         options: {
             responsive: true, maintainAspectRatio: false,
+            animation: false,
+            interaction: { mode: 'index', intersect: false },
             plugins: {
                 legend: { position: 'top' },
                 tooltip: { callbacks: { label: c => `${c.dataset.label}: ${Math.round(c.parsed.y)} mm` } }
@@ -310,6 +423,7 @@ function updateTempTrend() {
         },
         options: {
             responsive: true, maintainAspectRatio: false,
+            animation: false,
             interaction: { mode: 'index', intersect: false },
             plugins: {
                 legend: { position: 'top' },
@@ -338,11 +452,16 @@ function updateDTRTrend() {
         type: 'line',
         data: {
             labels: years,
-            datasets: [{ label: 'Diurnal Temperature Range (°C)', data: values, borderColor: '#8b5cf6', backgroundColor: 'rgba(139,92,246,0.08)', fill: true, borderWidth: 2 }]
+            datasets: [{ label: 'Diurnal Temperature Range (°C)', data: values, borderColor: '#8b5cf6', backgroundColor: 'rgba(139,92,246,0.08)', fill: true, borderWidth: 2, pointHoverRadius: 4, pointHitRadius: 20 }]
         },
         options: {
             responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: c => `DTR: ${c.parsed.y.toFixed(2)}°C` } } },
+            animation: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: { callbacks: { label: c => `DTR: ${c.parsed.y.toFixed(2)}°C` } }
+            },
             scales: {
                 x: { title: { display: true, text: 'Year', color: '#64748b' }, ticks: { maxTicksLimit: 12 } },
                 y: { title: { display: true, text: 'DTR (°C)', color: '#64748b' } }
@@ -371,19 +490,13 @@ function updateComfortTrend() {
                 borderColor: '#ef4444',
                 backgroundColor: 'rgba(239,68,68,0.08)',
                 fill: true, borderWidth: 2,
-                segment: {
-                    borderColor: c => {
-                        const v = c.p0.parsed.y;
-                        if (v < 21) return '#10b981';
-                        if (v < 24) return '#f59e0b';
-                        if (v < 27) return '#ef4444';
-                        return '#dc2626';
-                    }
-                }
+                pointHoverRadius: 4, pointHitRadius: 20
             }]
         },
         options: {
             responsive: true, maintainAspectRatio: false,
+            animation: false,
+            interaction: { mode: 'index', intersect: false },
             plugins: {
                 legend: { position: 'top' },
                 tooltip: {
@@ -400,6 +513,7 @@ function updateComfortTrend() {
                     }
                 },
                 annotation: {
+                    events: [],
                     annotations: {
                         line21: { type: 'line', yMin: 21, yMax: 21, borderColor: 'rgba(16,185,129,0.4)', borderDash: [6, 3], borderWidth: 1, label: { display: true, content: 'Comfortable', position: 'start', font: { size: 9 }, color: '#10b981', backgroundColor: 'transparent' } },
                         line24: { type: 'line', yMin: 24, yMax: 24, borderColor: 'rgba(245,158,11,0.4)', borderDash: [6, 3], borderWidth: 1, label: { display: true, content: 'Mild', position: 'start', font: { size: 9 }, color: '#f59e0b', backgroundColor: 'transparent' } },
@@ -511,6 +625,18 @@ function panchayatColor(name) {
 }
 
 // ── Map ───────────────────────────────────────────────────────────
+function makeMuniTooltip(name, type) {
+    const d = getPanchayatData(name);
+    const typeLabel = type === 'municipal_corporation' ? 'Corporation' : 'Municipality';
+    if (!d) return `<strong>${name}</strong><br><em>${typeLabel}</em>`;
+    const yrStr = String(currentYear);
+    const pr = d.annual_pr[yrStr];
+    const tas = d.annual_tas[yrStr];
+    return `<strong>${name}</strong> <span style="font-size:10px;color:#94a3b8">(${typeLabel})</span><br>` +
+        `Rainfall: ${pr != null ? Math.round(pr) + ' mm' : 'N/A'}<br>` +
+        `Temp: ${tas != null ? tas.toFixed(1) + ' °C' : 'N/A'}`;
+}
+
 function initMap() {
     map = L.map('map', { center: [11.42, 75.78], zoom: 10 });
 
@@ -519,14 +645,12 @@ function initMap() {
         maxZoom: 16,
     }).addTo(map);
 
-    // Filter to only gram_panchayat features
+    // ── Gram Panchayat layer ────────────────────────────────────────
     const gramFeatures = geojsonData.features.filter(
         f => f.properties['local_authority:IN'] === 'gram_panchayat' &&
             f.properties['admin_level'] === '8'
     );
-    const gramGeoJSON = { type: 'FeatureCollection', features: gramFeatures };
-
-    geojsonLayer = L.geoJSON(gramGeoJSON, {
+    geojsonLayer = L.geoJSON({ type: 'FeatureCollection', features: gramFeatures }, {
         style: feature => styleFeature(feature.properties.name),
         onEachFeature: (feature, layer) => {
             const name = feature.properties.name;
@@ -561,7 +685,38 @@ function initMap() {
         }
     }).addTo(map);
 
-    // Fit map to district bounds
+    // ── Municipality / Corporation layer ────────────────────────────
+    const urbanTypes = ['municipality', 'municipal_corporation'];
+    const urbanFeatures = geojsonData.features.filter(
+        f => urbanTypes.includes(f.properties['local_authority:IN']) &&
+            f.properties['admin_level'] === '8'
+    );
+    municipalityLayer = L.geoJSON({ type: 'FeatureCollection', features: urbanFeatures }, {
+        style: feature => styleMuniFeature(feature.properties.name, feature.properties['local_authority:IN']),
+        onEachFeature: (feature, layer) => {
+            const name = feature.properties.name;
+            const type = feature.properties['local_authority:IN'];
+            layer.on({
+                mouseover: e => {
+                    const l = e.target;
+                    l.setStyle({ weight: 3, color: '#ffffff', fillOpacity: 0.92 });
+                    l.bindTooltip(makeMuniTooltip(name, type), { sticky: true, opacity: 0.95 }).openTooltip();
+                },
+                mouseout: e => {
+                    municipalityLayer.resetStyle(e.target);
+                    e.target.closeTooltip();
+                    highlightSelected();
+                },
+                click: () => {
+                    currentPanchayat = name;
+                    document.getElementById('panchayat-select').value = name;
+                    updateAll();
+                }
+            });
+        }
+    }).addTo(map);
+
+    // Fit map to district bounds using gram layer
     try { map.fitBounds(geojsonLayer.getBounds(), { padding: [10, 10] }); } catch (e) { }
 
     // Add choropleth toggle buttons
@@ -578,23 +733,55 @@ function styleFeature(name) {
     };
 }
 
+function styleMuniFeature(name, type) {
+    const isSelected = name === currentPanchayat;
+    const isCorp = type === 'municipal_corporation';
+    // Use same choropleth fill as gram panchayats (proxied), but distinct borders
+    return {
+        fillColor: panchayatColor(name),
+        weight: isSelected ? 3 : isCorp ? 2.5 : 2,
+        color: isSelected ? '#ffffff' : isCorp ? '#c026d3' : '#f97316',
+        fillOpacity: isSelected ? 0.95 : 0.72,
+        dashArray: isSelected ? null : '6 4',
+    };
+}
+
 function highlightSelected() {
-    if (!geojsonLayer) return;
-    geojsonLayer.eachLayer(layer => {
-        const name = layer.feature.properties.name;
-        geojsonLayer.resetStyle(layer);
-        if (name === currentPanchayat) {
-            layer.setStyle({ weight: 2.5, color: '#ffffff', fillOpacity: 0.95 });
-        }
-    });
+    if (geojsonLayer) {
+        geojsonLayer.eachLayer(layer => {
+            const name = layer.feature.properties.name;
+            geojsonLayer.resetStyle(layer);
+            if (name === currentPanchayat) {
+                layer.setStyle({ weight: 2.5, color: '#ffffff', fillOpacity: 0.95 });
+            }
+        });
+    }
+    if (municipalityLayer) {
+        municipalityLayer.eachLayer(layer => {
+            const name = layer.feature.properties.name;
+            const type = layer.feature.properties['local_authority:IN'];
+            municipalityLayer.resetStyle(layer);
+            if (name === currentPanchayat) {
+                layer.setStyle({ weight: 3, color: '#ffffff', fillOpacity: 0.95, dashArray: null });
+            }
+        });
+    }
 }
 
 function refreshChoropleth() {
-    if (!geojsonLayer) return;
-    geojsonLayer.eachLayer(layer => {
-        const name = layer.feature.properties.name;
-        layer.setStyle(styleFeature(name));
-    });
+    if (geojsonLayer) {
+        geojsonLayer.eachLayer(layer => {
+            const name = layer.feature.properties.name;
+            layer.setStyle(styleFeature(name));
+        });
+    }
+    if (municipalityLayer) {
+        municipalityLayer.eachLayer(layer => {
+            const name = layer.feature.properties.name;
+            const type = layer.feature.properties['local_authority:IN'];
+            layer.setStyle(styleMuniFeature(name, type));
+        });
+    }
     updateMapLegend();
 }
 
@@ -612,6 +799,13 @@ function addMapLegend() {
                 div.querySelectorAll('.cmap-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 choroplethVar = btn.dataset.var;
+                // Update the map panel badge to reflect current choropleth
+                const badge = document.getElementById('map-legend-label');
+                if (badge) {
+                    badge.textContent = choroplethVar === 'temperature'
+                        ? 'Click a local body to select • Coloured by annual temperature'
+                        : 'Click a local body to select • Coloured by annual rainfall';
+                }
                 refreshChoropleth();
             });
         });
@@ -636,6 +830,13 @@ function updateMapLegend() {
 }
 
 function updateLegendHTML(div) {
+    const boundaryKey = `
+        <hr style="margin:6px 0;border-color:rgba(0,0,0,0.1)">
+        <b style="font-size:10px">Boundaries</b><br>
+        <span style="display:inline-block;width:24px;height:0;border-top:2px solid rgba(0,0,0,0.8);vertical-align:middle;margin-right:4px"></span>Grama Panchayat<br>
+        <span style="display:inline-block;width:24px;height:0;border-top:2px dashed #f97316;vertical-align:middle;margin-right:4px"></span>Municipality<br>
+        <span style="display:inline-block;width:24px;height:0;border-top:2px dashed #c026d3;vertical-align:middle;margin-right:4px"></span>Corporation`;
+
     if (choroplethVar === 'rainfall') {
         div.innerHTML = `
             <b>Annual Rainfall</b><br>
@@ -644,7 +845,7 @@ function updateLegendHTML(div) {
             <span style="background:#06b6d4">&nbsp;&nbsp;&nbsp;</span> 2500–3000<br>
             <span style="background:#22d3ee">&nbsp;&nbsp;&nbsp;</span> 2000–2500<br>
             <span style="background:#67e8f9">&nbsp;&nbsp;&nbsp;</span> 1500–2000<br>
-            <span style="background:#a5f3fc">&nbsp;&nbsp;&nbsp;</span> &lt;1500 mm`;
+            <span style="background:#a5f3fc">&nbsp;&nbsp;&nbsp;</span> &lt;1500 mm` + boundaryKey;
     } else {
         div.innerHTML = `
             <b>Mean Temperature</b><br>
@@ -653,13 +854,16 @@ function updateLegendHTML(div) {
             <span style="background:#f59e0b">&nbsp;&nbsp;&nbsp;</span> 27–28<br>
             <span style="background:#facc15">&nbsp;&nbsp;&nbsp;</span> 26–27<br>
             <span style="background:#4ade80">&nbsp;&nbsp;&nbsp;</span> 25–26<br>
-            <span style="background:#86efac">&nbsp;&nbsp;&nbsp;</span> &lt;25 °C`;
+            <span style="background:#86efac">&nbsp;&nbsp;&nbsp;</span> &lt;25 °C` + boundaryKey;
     }
 }
 
 function selectPanchayatFromMap(name) {
     currentPanchayat = name;
-    document.getElementById('panchayat-select').value = name;
+    // Try setting the select value — works for both gram panchayat and urban units
+    const sel = document.getElementById('panchayat-select');
+    const opt = sel.querySelector(`option[value="${name}"]`);
+    if (opt) sel.value = name;
     map.closePopup();
     updateAll();
 }
